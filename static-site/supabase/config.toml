@@ -1,0 +1,5 @@
+project_id = "coreaml-demo"
+
+[functions.coreaml-demo]
+verify_jwt = false
+entrypoint = "./functions/coreaml-demo/index.js"
