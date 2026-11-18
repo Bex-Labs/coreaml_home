@@ -1,64 +1,42 @@
 # CoreAML website
 
-Product website for CoreAML, a product of ZeroDaySecurity and Bex Labs.
-Includes feature overviews, real demo screenshots and a demo enquiry form.
+Static HTML, CSS and JavaScript landing page for CoreAML, a product of ZeroDaySecurity and Bex Labs.
+Open `site/index.html` with VS Code Live Server to preview the frontend.
 
-## Requirements
-Node.js 22.13+ and pnpm 11.25.0. This is a React/Vinext application with a
-Cloudflare Workers backend, not a static HTML file for Live Server.
+## Demo requests
 
-## Run in VS Code / PowerShell
-Open the folder containing package.json, then run:
+The Cloudflare Worker forwards same-origin `POST /api/demo` requests to
+Supabase. Supabase stores the request, then sends its details through Resend
+to `bexinnovation@outlook.com`. Replies go to the applicant's email address.
+The visitor receives a reference after the email provider accepts the message.
+If delivery is temporarily unavailable, the browser lets the visitor retry
+the same request. The database retains the booking and tracks acceptance by
+the email provider separately from inbox delivery.
 
-```powershell
-pnpm install --frozen-lockfile
-pnpm db:local
-pnpm dev
-```
+## Deploy
 
-Open the URL shown by the terminal (normally http://localhost:5173).
-Keep the terminal running. Ctrl+C stops the server.
+1. Choose the intended Supabase project. Apply `supabase/setup.sql` once
+   through its SQL Editor. This creates the CoreAML request table and a
+   server-only RPC. Review the project's Data API settings if the API does
+   not expose the public schema to the service role.
+2. In Resend, verify a sender domain and create a sending API key. In Supabase
+   Edge Function Secrets, add `RESEND_API_KEY`, `COREAML_DEMO_FROM` (for
+   example, `CoreAML <demo@your-verified-domain.example>`), and
+   `COREAML_DEMO_RELAY_SECRET` (a new high-entropy random value).
+3. From the project folder, deploy using an authenticated Supabase CLI:
+   `supabase functions deploy coreaml-demo --project-ref YOUR_PROJECT_REF`.
+   The function authenticates the Cloudflare relay with the shared secret.
+4. From the same folder, configure Cloudflare with
+   `npx wrangler@4.92.0 secret put COREAML_DEMO_RELAY_SECRET` using the same
+   relay secret. Configure `COREAML_DEMO_FUNCTION_URL` with
+   `npx wrangler@4.92.0 secret put COREAML_DEMO_FUNCTION_URL`. Its value is
+   `https://YOUR_PROJECT_REF.supabase.co/functions/v1/coreaml-demo`.
+   Then run `npx wrangler@4.92.0 deploy`.
+5. Submit a clearly labeled test via the deployed homepage, check for the
+   booking in Supabase and verify receipt in Outlook. A stored row with an
+   empty `email_accepted_at` means the application has yet to record provider
+   acceptance.
 
-If downloads time out, retry without deleting the lockfile or package cache:
-
-```powershell
-pnpm install --frozen-lockfile --network-concurrency=2 --fetch-timeout=600000
-```
-
-`pnpm db:local` applies migrations only to a local emulated database. It is
-needed before the demo form can store local enquiries. No email or CRM
-notifications are configured. The form reports a reference only after saving.
-
-## Build
-
-```powershell
-pnpm build
-pnpm start
-```
-
-## Deploy to your Cloudflare account
-1. Sign in with `pnpm exec wrangler login`.
-2. Create a database with `pnpm exec wrangler d1 create coreaml-demo-requests`.
-3. Replace the placeholder database_id in wrangler.jsonc with the returned ID.
-4. Apply the website enquiry migration with `pnpm db:remote` after confirming
-   that the configured database is the intended destination.
-5. Run `pnpm deploy`.
-
-The placeholder ID supports local setup only; configure a real database before
-production deployment. No production records or credentials are included.
-The marketing website does not contain the CoreAML investigation backend.
-
-## GitHub
-Commit the source and pnpm-lock.yaml. Do not commit node_modules, dist, .wrangler,
-local environment files, credentials, database exports or enquiry data.
-No authentication is implemented for this public marketing site; do not expose
-an administrative enquiry viewer without adding access controls.
-
-## Public launch checks
-Set approved company privacy/contact details and retention rules. Add only
-permissioned client testimonials. KYC/screening coverage depends on deployment.
-The screenshot records are fictional examples, not production customer data.
-
-## Third-party notices
-Retain vendor licence files. Cloudflare, Vinext, React and other dependencies
-remain required; their names and licences are not product endorsements.
+The original frontend and privacy page are included. The privacy page now
+mentions that requests also go to the team's email inbox. If replacing an
+existing D1 deployment, its historical enquiries stay in D1.

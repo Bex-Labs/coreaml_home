@@ -1,13 +1,10 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "coreaml-website",
-  "main": "worker/index.ts",
+  "main": "worker.mjs",
   "compatibility_date": "2026-05-15",
-  "compatibility_flags": ["nodejs_compat"],
-  "d1_databases": [{
-    "binding": "DB",
-    "database_name": "coreaml-demo-requests",
-    "database_id": "00000000-0000-4000-8000-000000000000",
-    "migrations_dir": "drizzle"
-  }]
+  "assets": {
+    "directory": "./site",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/demo"]
+  }
 }
