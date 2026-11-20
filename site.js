@@ -124,7 +124,7 @@ demoForm.addEventListener("submit", async (event) => {
   updateForm("Submitting your request…");
   let message;
   try {
-    const response = await fetch("/api/demo", {
+    const response = await fetch("https://coreaml-demo-relay.bexinnovation.workers.dev/api/demo", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(pendingRequest),
